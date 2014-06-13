@@ -21,5 +21,5 @@ These are the only oauth providers known to work with the oauth code:
    6. Set `Valid OAuth redirect URIs` to `http://127.0.0.1/authorized/google`.
 
 
-#### Running
+## Running
 To run you need to define the CATHERDER_CONFIG environment variable to point at your config. That's it!
