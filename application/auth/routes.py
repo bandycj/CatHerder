@@ -1,5 +1,5 @@
 from application import application
-from application.auth import login, authorized, logout
+from application.auth.views import login, authorized, logout
 
 __author__ = 'Chris'
 

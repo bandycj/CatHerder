@@ -16,6 +16,6 @@ class ConfigKey(AutoNumberedEnum):
     CLIENT_ID = ()
     CLIENT_SECRET = ()
 
-class OAuthService(Enum):
+class OAuthServiceKey(Enum):
     GOOGLE = 'google'
     FACEBOOK = 'facebook'

@@ -1,6 +1,6 @@
 import os
 
-from config.config_enums import OAuthService, ConfigKey
+from config.config_enums import OAuthServiceKey, ConfigKey
 
 
 __author__ = 'Chris'
@@ -25,14 +25,14 @@ DEFAULT_USER_LEVEL = 'user'
 USER_LEVELS = ['admin', DEFAULT_USER_LEVEL]
 
 OAUTH_CONFIG = {
-    OAuthService.GOOGLE: {
+    OAuthServiceKey.GOOGLE: {
         ConfigKey.SERVICE_LOGIN_URL: 'https://accounts.google.com/o/oauth2/auth',
         ConfigKey.ACCESS_TOKEN_URL: 'https://accounts.google.com/o/oauth2/token',
         ConfigKey.USER_INFO_URL: 'https://www.googleapis.com/plus/v1/people/me',
         ConfigKey.CLIENT_ID: '<google client id>',
         ConfigKey.CLIENT_SECRET: '<google client secret>'
     },
-    OAuthService.FACEBOOK: {
+    OAuthServiceKey.FACEBOOK: {
         ConfigKey.SERVICE_LOGIN_URL: 'https://www.facebook.com/dialog/oauth',
         ConfigKey.ACCESS_TOKEN_URL: 'https://graph.facebook.com/oauth/access_token',
         ConfigKey.USER_INFO_URL: 'https://graph.facebook.com/me',
