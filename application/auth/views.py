@@ -16,7 +16,7 @@ __author__ = 'Chris'
 def login(service=None):
     if service is None:
         if current_user.is_authenticated():
-            flash('You are already logged in as ' + current_user.user_name +
+            flash('You are already logged in as ' + current_user.name +
                   '. Clicking a link here will link that service to your '
                   'current account. You will then be able to login with either.',
                   'warning')
@@ -37,26 +37,22 @@ def authorized(service):
 
             # If someone in this session is already logged in, link this auth to them.
             if current_user.is_authenticated():
-                current_user.add_oauth_identity(oauth_user.service_name, oauth_user.service_user_id)
-                flash('Linked your ' + oauth_service.value + ' account to your CatHerder account!', 'success')
+                oauth_id, created = current_user.add_oauth_identity(oauth_user.service_name, oauth_user.service_user_id)
+                if created:
+                    flash('Linked your ' + oauth_service.value + ' account to your CatHerder account!', 'success')
+                else:
+                    flash('Your ' + oauth_service.value + ' account was already linked to your CatHerder account.', 'success')
             else:
                 # First try to look them up by their oauth service id.
                 user = OAuthIdentity.get_user(oauth_user.service_name, oauth_user.service_user_id)
                 if user is None:
                     # So we don't know about this social login yet, see if we have their email.
-                    user = User.get_user(email=oauth_user.email)
-
-                    if user is None:
-                        user = User.add_user(
-                            user_name=oauth_user.user_name,
-                            email=oauth_user.email,
-                            oauth_service_name=oauth_service.value,
-                            oauth_service_id=oauth_user.service_user_id
-                        )
-                    else:
-                        # If we found the user by email but not oauth_identity then add a new identity.
-                        user.add_oauth_identity(oauth_user.service_name, oauth_user.service_user_id)
-
+                    user, created = User.add_user(
+                        name=oauth_user.user_name,
+                        email=oauth_user.email,
+                        oauth_service_name=oauth_service.value,
+                        oauth_service_id=oauth_user.service_user_id
+                    )
                 login_user(user, remember=True)
                 flash('You are now logged in with %s' % (oauth_service.value), category='info')
             return redirect(index_url())
