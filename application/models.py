@@ -58,6 +58,8 @@ class User(db.Model, CatherderMixin, UserMixin):
     def get_auth_token(self):
         return self.auth_token
 
+    def is_admin(self):
+        return self.user_level == admin_user_level
 
     @classmethod
     def add_user(cls, name, email, oauth_service_name, oauth_service_id):
@@ -138,3 +140,4 @@ for name in application.config['USER_LEVELS']:
     UserLevel.get_or_create(name=name)
 save()
 default_user_level = lambda: UserLevel.query.filter_by(name=application.config['DEFAULT_USER_LEVEL']).first()
+admin_user_level = lambda: UserLevel.query.filter_by(name=application.config['DEFAULT_USER_LEVEL']).first()

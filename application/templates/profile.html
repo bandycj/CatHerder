@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% set active_page = "profile" %}
+{% block content %}
+    <div class="panel panel-primary">
+        <div class="panel-heading">User Profile</div>
+        <div class="panel-body">
+            <dl class="dl-horizontal">
+                <dt>User Name</dt>
+                <dd>{{ user.name }}</dd>
+                <dt>Email</dt>
+                <dd>{{ user.email }}</dd>
+            </dl>
+
+            <table class="table table-condensed">
+                <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for oauth_service in oauth_services %}
+                    <tr>
+                        <td>{{ oauth_service.value }}</td>
+                        <td>
+                            {% set linked = [] %}
+                            {% for oauth_identity in user.oauth_identities %}
+                                {% if oauth_identity.name == oauth_service.value %}
+                                    {% if linked.append(1) %}{% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if linked %}
+                                Linked!
+                            {% else %}
+                                <a href="{{ url_for('login', service=oauth_service.value) }}">Click to
+                                    link {{ oauth_service.value }}.</a><br/>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

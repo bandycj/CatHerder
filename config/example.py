@@ -22,7 +22,8 @@ SERVER_NAME = '127.0.0.1:5510'
 # Connect to the database
 SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, '../database.db')
 DEFAULT_USER_LEVEL = 'user'
-USER_LEVELS = ['admin', DEFAULT_USER_LEVEL]
+ADMIN_USER_LEVEL = 'admin'
+USER_LEVELS = [ADMIN_USER_LEVEL, DEFAULT_USER_LEVEL]
 
 OAUTH_CONFIG = {
     OAuthServiceKey.GOOGLE: {

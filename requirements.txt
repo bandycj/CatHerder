@@ -1,5 +1,7 @@
 Flask==0.10.1
 Flask-Login==0.2.11
 Flask-SQLAlchemy==1.0
+Flask-WTF==0.9.5
+WTForms==2.0
 enum34==1.0
 requests==2.3.0

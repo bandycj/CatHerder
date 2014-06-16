@@ -1,15 +1,18 @@
-from flask import request, abort, flash
-from flask.ext.login import current_user, login_user, logout_user
+from flask import abort, flash, url_for, request
+from flask.ext.login import current_user, logout_user, login_required
+from flask.ext.wtf import Form
 from werkzeug.utils import redirect
+from wtforms.ext.sqlalchemy.orm import model_form
 
-from application import index_url
+from application.auth.controller import auth_user
 from application.auth.services import oauth_services
-from application.models import OAuthIdentity, User
+from application.models import User, save
 from common.decorators import templated
 from config.config_enums import OAuthServiceKey
 
 
 __author__ = 'Chris'
+ProfileForm = model_form(User, Form)
 
 
 @templated
@@ -19,7 +22,7 @@ def login(service=None):
             flash('You are already logged in as ' + current_user.name +
                   '. Clicking a link here will link that service to your '
                   'current account. You will then be able to login with either.',
-                  'warning')
+                  'alert-info')
         return {'oauth_services': oauth_services}
     else:
         oauth_service = OAuthServiceKey(service)
@@ -29,42 +32,49 @@ def login(service=None):
 
 
 def authorized(service):
-    try:
-        oauth_service = OAuthServiceKey(service)
-        if oauth_service in oauth_services:
-            auth_response = oauth_services[oauth_service].get_access_token(request.url)
-            oauth_user = oauth_services[oauth_service].get_user_info(auth_response)
-
-            # If someone in this session is already logged in, link this auth to them.
-            if current_user.is_authenticated():
-                oauth_id, created = current_user.add_oauth_identity(oauth_user.service_name, oauth_user.service_user_id)
-                if created:
-                    flash('Linked your ' + oauth_service.value + ' account to your CatHerder account!', 'success')
-                else:
-                    flash('Your ' + oauth_service.value + ' account was already linked to your CatHerder account.', 'success')
-            else:
-                # First try to look them up by their oauth service id.
-                user = OAuthIdentity.get_user(oauth_user.service_name, oauth_user.service_user_id)
-                if user is None:
-                    # So we don't know about this social login yet, see if we have their email.
-                    user, created = User.add_user(
-                        name=oauth_user.user_name,
-                        email=oauth_user.email,
-                        oauth_service_name=oauth_service.value,
-                        oauth_service_id=oauth_user.service_user_id
-                    )
-                login_user(user, remember=True)
-                flash('You are now logged in with %s' % (oauth_service.value), category='info')
-            return redirect(index_url())
-    except ValueError as e:
-        print e.message
-    abort(500)
+    user, message, success = auth_user(service)
+    if success:
+        flash(message, 'alert-success')
+    else:
+        flash(message, 'alert-danger')
+    return request.values.get('next') or redirect(url_for('index'))
 
 
 def logout():
     if current_user.is_authenticated():
         logout_user()
-        flash('Logout complete!', category='info')
+        flash('Logout complete!', category='alert-success')
     else:
-        flash('You are not logged in.', category='error')
-    return redirect(index_url())
+        flash('You are not logged in.', category='alert-danger')
+    return request.values.get('next') or redirect(url_for('index'))
+
+
+@templated
+@login_required
+def profile(id=None):
+    if id is not None:
+        user = User.query.get(id)
+    else:
+        user = current_user
+    can_edit = current_user.id == id or current_user.is_admin()
+    return {'user': user,
+            'oauth_services': oauth_services,
+            'can_edit': can_edit}
+
+
+# TODO: enable profile editing.
+    
+# @templated
+# @login_required
+# def profile_edit(id):
+#     if current_user.id == id or current_user.is_admin():
+#         user = User.query.get(id)
+#         form = ProfileForm(request.form, user)
+#         if  request.method == 'POST' and form.validate_on_submit():
+#             form.populate_obj(user)
+#             save()
+#             flash('Profile Updated!', 'alert-success')
+#             return redirect(url_for('profile', id=id))
+#         return {'form': form}
+#     else:
+#         abort(401)
