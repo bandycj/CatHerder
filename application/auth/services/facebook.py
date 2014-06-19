@@ -1,6 +1,7 @@
 import urlparse
 
 import requests
+from werkzeug.exceptions import abort
 
 from application.auth.oauth_classes import OAuthUser
 from config.config_enums import OAuthServiceKey
@@ -15,8 +16,11 @@ def init_facebook(oauth_service):
         :param params: the query parameters.
         :return: the access_token and expiration.
         """
-        response = requests.get(access_token_url, params=params)
-        return urlparse.parse_qs(response.text)
+        try:
+            response = requests.get(access_token_url, params=params)
+            return urlparse.parse_qs(response.text)
+        except:
+            abort(501)
 
 
     @oauth_service.user_info_requester

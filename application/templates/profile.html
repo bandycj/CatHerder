@@ -1,45 +1,102 @@
 {% extends 'base.html' %}
 {% set active_page = "profile" %}
+{% block head %}
+
+{% endblock %}
 {% block content %}
     <div class="panel panel-primary">
         <div class="panel-heading">User Profile</div>
         <div class="panel-body">
-            <dl class="dl-horizontal">
-                <dt>User Name</dt>
-                <dd>{{ user.name }}</dd>
-                <dt>Email</dt>
-                <dd>{{ user.email }}</dd>
-            </dl>
-
-            <table class="table table-condensed">
-                <thead>
-                <tr>
-                    <th>Service</th>
-                    <th>Status</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for oauth_service in oauth_services %}
+            {% if can_edit == True %}
+                <form id="profileForm" class="form-horizontal" role="form" method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group">
+                        {{ form.name.label(class_="col-sm-2 control-label") }}
+                        <div class="col-sm-10">
+                            {{ form.name(size=20, class_='form-control') }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        {{ form.email.label(class_="col-sm-2 control-label") }}
+                        <div class="col-sm-10">
+                            {{ form.email(size=20, class_='form-control') }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-default">Update</button>
+                        </div>
+                    </div>
+                </form>
+            {% else %}
+                <dl class="dl-horizontal">
+                    <dt>User Name</dt>
+                    <dd>{{ user.name }}</dd>
+                    <dt>Email</dt>
+                    <dd>{{ user.email }}</dd>
+                </dl>
+            {% endif %}
+            {% if can_edit == True %}
+                <table class="table table-condensed">
+                    <thead>
                     <tr>
-                        <td>{{ oauth_service.value }}</td>
-                        <td>
-                            {% set linked = [] %}
-                            {% for oauth_identity in user.oauth_identities %}
-                                {% if oauth_identity.name == oauth_service.value %}
-                                    {% if linked.append(1) %}{% endif %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if linked %}
-                                Linked!
-                            {% else %}
-                                <a href="{{ url_for('login', service=oauth_service.value) }}">Click to
-                                    link {{ oauth_service.value }}.</a><br/>
-                            {% endif %}
-                        </td>
+                        <th>Service</th>
+                        <th>Status</th>
                     </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    {% for oauth_service in oauth_services %}
+                        <tr>
+                            <td>{{ oauth_service.value }}</td>
+                            <td>
+                                {% set linked = [] %}
+                                {% for oauth_identity in user.oauth_identities %}
+                                    {% if oauth_identity.name == oauth_service.value %}
+                                        {% if linked.append(1) %}{% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if linked %}
+                                    Linked!
+                                {% else %}
+                                    <a href="{{ url_for('login', service=oauth_service.value) }}">Click to
+                                        link {{ oauth_service.value }}.</a><br/>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
         </div>
     </div>
+{% endblock %}
+{% block scripts %}
+    <script type="application/javascript">
+        $(document).ready(function () {
+            var profileForm = $("#profileForm");
+            profileForm.bind('submit', function (e) {
+                e.preventDefault();
+                updateProfile(profileForm.serialize());
+            });
+        });
+
+        function updateProfile(data) {
+            var csrftoken = $('meta[name=csrf-token]').attr('content');
+            var ajax = $.ajax({
+                type: "POST",
+                data: data,
+                url: "{{ url_for('profile', id=user.id) }}",
+                beforeSend: function (xhr, settings) {
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type)) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken)
+                    }
+                }
+            }).done(function (data) {
+                alert(data.message);
+            });
+            ajax.fail(function (data) {
+                alert(data.message);
+            });
+        }
+    </script>
 {% endblock %}

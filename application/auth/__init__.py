@@ -22,8 +22,5 @@ def load_user(id):
 
 @login_manager.token_loader
 def load_token(token):
-    user = User.query.filter_by(auth_token=token).first()
-    if user:
-        return user
-    return models.AnonymousUser()
+    return User.query.filter_by(auth_token=token).first() or models.AnonymousUser()
 

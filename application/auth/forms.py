@@ -1,7 +1,14 @@
 from flask.ext.wtf import Form
-from wtforms.ext.sqlalchemy.orm import model_form
-from application.models import User
+from wtforms import StringField
+from wtforms.fields.html5 import EmailField
+from wtforms.validators import DataRequired, Email
+
 
 __author__ = 'Chris'
 
 
+class NameForm(Form):
+    name = StringField('User Name', validators=[DataRequired()], )
+
+class EmailForm(Form):
+    email = EmailField('Email', validators=[DataRequired(), Email()])

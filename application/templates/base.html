@@ -6,6 +6,8 @@
     <title>CatHearder</title>
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
     <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/catherder.css') }}">
+    {% block head %}
+    {% endblock %}
 </head>
 <body>
 {% set active_page = active_page|default('index') -%}
@@ -63,5 +65,7 @@
 <script src="{{ url_for('static', filename='js/jquery-2.1.1.min.js') }}"></script>
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+{% block scripts %}
+{% endblock %}
 </body>
 </html>

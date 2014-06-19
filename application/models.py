@@ -48,7 +48,7 @@ class User(db.Model, CatherderMixin, UserMixin):
     def add_oauth_identity(self, service_name, service_id):
         try:
             oauth_id, created = OAuthIdentity.get_or_create(name=service_name, service_id=service_id, user_id=self.id)
-            self.auth_token = make_secure_token(service_name, service_id, key="deterministic")
+            self.auth_token = make_secure_token(service_name, service_id)
             save()
             return oauth_id, created
         except Exception as e:

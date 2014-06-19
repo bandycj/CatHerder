@@ -1,4 +1,6 @@
+
 import requests
+from werkzeug.exceptions import abort
 
 from application.auth.oauth_classes import OAuthUser
 from config.config_enums import OAuthServiceKey
@@ -13,9 +15,12 @@ def init_google(oauth_service):
         :param params: the query parameters.
         :return: the access_token and expiration.
         """
-        response = requests.post(access_token_url, data=params)
-        json = response.json()
-        return json
+        try:
+            response = requests.post(access_token_url, data=params)
+            json = response.json()
+            return json
+        except:
+            abort(501)
 
 
     @oauth_service.user_info_requester
