@@ -1,6 +1,7 @@
 from functools import wraps
 
-from flask import request, render_template
+from flask import request, render_template, current_app, flash, redirect, url_for
+from flask.ext.login import current_user
 
 
 __author__ = 'Chris'
@@ -30,3 +31,22 @@ def templated(f, template=None):
         return render_template(template_name, **ctx)
 
     return decorated_function
+
+
+def admin_required(func):
+    '''
+    If you decorate a view with this, it will ensure that the current user is
+    logged in and authenticated and is an admin before calling the actual view.
+    (If they are not, it calls the :attr:`LoginManager.unauthorized` callback.)
+    :param func: The view function to decorate.
+    :type func: function
+    '''
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if current_app.login_manager._login_disabled:
+            return func(*args, **kwargs)
+        elif not current_user.is_authenticated() or not current_user.is_admin():
+            flash('You do not have permission to access this function.', 'alert-danger')
+            return request.values.get('next') or redirect(url_for('index'))
+        return func(*args, **kwargs)
+    return decorated_view

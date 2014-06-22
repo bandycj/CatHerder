@@ -50,16 +50,17 @@ class User(db.Model, CatherderMixin, UserMixin):
             oauth_id, created = OAuthIdentity.get_or_create(name=service_name, service_id=service_id, user_id=self.id)
             self.auth_token = make_secure_token(service_name, service_id)
             save()
-            return oauth_id, created
-        except Exception as e:
-            print e.message
+            return created
+        except Exception:
             rollback()
+            return False
+
 
     def get_auth_token(self):
         return self.auth_token
 
     def is_admin(self):
-        return self.user_level == admin_user_level
+        return self.user_level_id == admin_user_level().id
 
     @classmethod
     def add_user(cls, name, email, oauth_service_name, oauth_service_id):
@@ -133,6 +134,8 @@ class PlaceRank(db.Model, CatherderMixin):
 
 class AnonymousUser(AnonymousUserMixin):
     """AnonymousUser definition"""
+    def is_admin(self):
+        return False
 
 
 db.create_all()
@@ -140,4 +143,4 @@ for name in application.config['USER_LEVELS']:
     UserLevel.get_or_create(name=name)
 save()
 default_user_level = lambda: UserLevel.query.filter_by(name=application.config['DEFAULT_USER_LEVEL']).first()
-admin_user_level = lambda: UserLevel.query.filter_by(name=application.config['DEFAULT_USER_LEVEL']).first()
+admin_user_level = lambda: UserLevel.query.filter_by(name=application.config['ADMIN_USER_LEVEL']).first()

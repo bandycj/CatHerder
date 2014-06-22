@@ -1,6 +1,9 @@
 from flask.ext.login import current_user, login_required
 
-from common.decorators import templated
+from application.models import User, UserLevel
+
+from common.decorators import templated, admin_required
+
 
 __author__ = 'Chris'
 
@@ -20,4 +23,10 @@ def about():
     return {"value": "42"}
 
 
-
+@templated
+@admin_required
+def admin():
+    return {
+        'users': User.query.all(),
+        'user_levels': UserLevel.query.all()
+    }

@@ -1,20 +1,15 @@
 from flask import abort, flash, url_for, request, jsonify, render_template
-
 from flask.ext.login import current_user, logout_user, login_required
 from flask.ext.wtf import Form
-from flask.ext.wtf.recaptcha import validators
 from werkzeug.utils import redirect
 from wtforms import StringField
-from wtforms.ext.sqlalchemy.orm import model_form
-
 from wtforms.fields.html5 import EmailField
-from wtforms.validators import DataRequired, Email, Length
+from wtforms.validators import DataRequired, Email
 
 from application.auth.controller import auth_user
-
 from application.auth.services import oauth_services
-from application.models import User, save
-from common.decorators import templated
+from application.models import User, save, UserLevel, rollback, admin_user_level
+from common.decorators import templated, admin_required
 from config.config_enums import OAuthServiceKey
 
 
@@ -25,8 +20,9 @@ class ProfileForm(Form):
     name = StringField('User Name', validators=[DataRequired()], )
     email = EmailField('Email', validators=[DataRequired(), Email()])
 
-json_error = lambda errors: jsonify({'message': errors, 'class': 'alert-danger'})
-json_success = lambda: jsonify({'message': 'Success', 'class': 'alert-success'})
+
+json_error = lambda errors: jsonify(message=errors, message_class='danger')
+json_success = lambda: jsonify(message='Success', message_class='success')
 
 
 @templated
@@ -84,8 +80,29 @@ def profile(id=None):
             return json_error('Invalid data entered.')
     else:
         return render_template('profile.html',
-            user=user,
-            oauth_services=oauth_services,
-            can_edit=can_edit,
-            form=form
+                               user=user,
+                               oauth_services=oauth_services,
+                               can_edit=can_edit,
+                               form=form
         )
+
+
+@admin_required
+def user_level():
+    user_id = request.args.get('userId', -1, type=int)
+    user_level_id = request.args.get('userLevelId', -1, type=int)
+    try:
+        user = User.query.get_or_404(user_id)
+        user_level = UserLevel.query.get_or_404(user_level_id)
+        admin = admin_user_level()
+        if user.user_level == admin and admin.users.count() < 2:
+            return json_error('You can not remove the last admin!')
+        elif user.user_level == admin and user == current_user:
+            return json_error('You can not demote yourself from admin!')
+        else:
+            user.user_level_id = user_level.id
+            save()
+            return json_success()
+    except Exception as e:
+        rollback()
+        return json_error(e.message)

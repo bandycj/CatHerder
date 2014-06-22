@@ -32,11 +32,11 @@ def already_logged_in(oauth_user, oauth_service):
     :return: User or None, message as string, success as boolean.
     """
     try:
-        oauth_id, created = current_user.add_oauth_identity(oauth_user.service_name, oauth_user.service_user_id)
+        created = current_user.add_oauth_identity(oauth_user.service_name, oauth_user.service_user_id)
         if created:
             message = 'Linked your ' + oauth_service.value + ' account to your CatHerder account!'
         else:
-            message = 'Your ' + oauth_service.value + ' account was already linked to your CatHerder account.'
+            message = 'Your ' + oauth_service.value + ' account is already linked to a CatHerder user.'
         return current_user, message, True
     except Exception as e:
         return None, e.message, False

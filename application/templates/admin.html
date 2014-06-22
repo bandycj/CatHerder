@@ -1,0 +1,67 @@
+{%- extends 'base.html' -%}
+{%- set active_page = "admin" -%}
+{%- block content -%}
+    <div class="panel panel-primary">
+        <div class="panel-heading">Users</div>
+        <div class="panel-body">
+            <table class="table table-condensed">
+                <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Level</th>
+                </tr>
+                </thead>
+                <tbody>
+                {%- for user in users %}
+                    <tr>
+                        <td>{{ user.name }}</td>
+                        <td>
+                            <div class="btn-group btn-input">
+                                <button type="button" class="btn btn-default dropdown-toggle form-control" data-toggle="dropdown">
+                                    <span data-bind="label">{{ user.user_level.name }}</span><span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu" role="menu">
+                                    {%- for user_level in user_levels %}
+                                        <li data-user="{{ user.id }}" data-id="{{ user_level.id }}">
+                                            <a role="menuitem" href="#">{{ user_level.name }}</a>
+                                        </li>
+                                    {%- endfor %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                {%- endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{%- endblock -%}
+
+{%- block scripts -%}
+    <script type="application/javascript">
+        $(document).ready(function () {
+            $(document.body).on('click', '.dropdown-menu li', function (event) {
+                var $target = $(event.currentTarget);
+
+                $.getJSON("{{ url_for('user_level') }}", {
+                    userId: $target.attr('data-user'),
+                    userLevelId: $target.attr('data-id')
+                }, function (data) {
+                    $target.closest('.btn-group')
+                            .find('[type="button"]')
+                            .addClass("btn-" + data.message_class);
+                    if (data.message_class == 'danger') {
+                        alert(data.message);
+                    } else {
+                        $target.closest('.btn-group')
+                                .find('[data-bind="label"]').text($target.text())
+                                .end()
+                                .children('.dropdown-toggle').dropdown('toggle');
+                    }
+                });
+
+                return false;
+            });
+        });
+    </script>
+{%- endblock -%}
